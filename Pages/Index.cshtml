@@ -1,0 +1,47 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "PCB Defect Logger";
+}
+
+<div class="container mt-4">
+    <h2>🔍 PCB Defect Logger</h2>
+    
+    <!-- ส่วน Lot Number -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label>Lot Number:</label>
+            <select id="lotSelect" class="form-control">
+                <option value="">-- เลือก Lot Number หรือพิมพ์ใหม่ --</option>
+            </select>
+            <input type="text" id="newLotInput" class="form-control mt-2" placeholder="หรือพิมพ์ Lot ใหม่ที่นี่... ตัวอย่าง: LOT-20240601-001">
+        </div>
+        <div class="col-md-6 d-flex align-items-end gap-2">
+            <button id="btnReset" class="btn btn-danger ms-auto" style="display:none;">🗑️ ล้างข้อมูล Lot นี้</button>
+            <button id="btnExport" class="btn btn-success" style="display:none;">📥 Export CSV</button>
+        </div>
+    </div>
+
+    <!-- ส่วน Grid และ Summary -->
+    <div class="row">
+        <div class="col-md-8">
+            <div id="pcb-grid" class="pcb-grid"></div>
+        </div>
+        <div class="col-md-4">
+            <h5>📊 Defect Summary</h5>
+            <ul id="defect-list" class="list-group"></ul>
+        </div>
+    </div>
+
+    @* <!-- ส่วนกราฟ -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <h5>📊 Defect Distribution</h5>
+            <canvas id="defectChart"></canvas>
+        </div>
+    </div> *@
+</div>
+
+@section Scripts {
+    <script src="~/js/pcb-grid.js"></script>
+}

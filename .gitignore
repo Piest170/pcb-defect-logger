@@ -1,0 +1,5 @@
+bin/
+obj/
+*.user
+*.suo
+pcb_defects.db
