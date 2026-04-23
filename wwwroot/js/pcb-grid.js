@@ -4,8 +4,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const newLotInput = document.getElementById('newLotInput');
     const defectList = document.getElementById('defect-list');
     const btnReset = document.getElementById('btnReset');
-    const btnExport = document.getElementById('btnExport'); // ตัวแปรนี้มีแค่นี้ตัวเดียว
+    const btnExport = document.getElementById('btnExport');
     const gridSize = 10;
+    // ตัวแปรสำหรับเก็บ chart instances
+    let defectChartInstance = null;
+    let locationChartInstance = null;
 
     // 1. โหลดรายชื่อ Lot ทั้งหมดเมื่อเปิดเว็บ
     loadLotsList();
@@ -25,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!lot) lot = newLotInput.value.trim();
 
                 if (!lot) { 
-                    alert('กรุณาเลือก Lot หรือพิมพ์ Lot ใหม่ก่อน'); 
+                    alert('กรุณาเลือก LOT หรือพิมพ์ LOT ใหม่ก่อน'); 
                     return; 
                 }
 
@@ -112,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnExport.addEventListener('click', () => {
         const lot = lotSelect.value;
         if (!lot) {
-            alert('กรุณาเลือก Lot Number ก่อน');
+            alert('กรุณาเลือก LOT Number ก่อน');
             return;
         }
 
@@ -143,6 +146,125 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Functions ---
 
+        // ฟังก์ชันสร้างกราฟ
+    function updateCharts(defects) {
+        // นับจำนวน defect แยกตามประเภท
+        const defectCount = {};
+        const locationCount = {};
+        
+        defects.forEach(d => {
+            // นับตามประเภท
+            defectCount[d.defectType] = (defectCount[d.defectType] || 0) + 1;
+            
+            // นับตามตำแหน่ง (แถว)
+            const row = `Row ${d.gridY}`;
+            locationCount[row] = (locationCount[row] || 0) + 1;
+        });
+
+        // ทำลายกราฟเก่าถ้ามี
+        if (defectChartInstance) {
+            defectChartInstance.destroy();
+        }
+        if (locationChartInstance) {
+            locationChartInstance.destroy();
+        }
+
+        // สร้าง Pie Chart - Defect Distribution
+        const defectCtx = document.getElementById('defectChart').getContext('2d');
+        defectChartInstance = new Chart(defectCtx, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(defectCount),
+                datasets: [{
+                    data: Object.values(defectCount),
+                    backgroundColor: [
+                        '#ff6384', // Scratch - Red
+                        '#ffcd56', // Solder - Yellow
+                        '#4bc0c0', // Missing - Green
+                        '#36a2eb', // Other - Blue
+                        '#9966ff'  // Additional - Purple
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Defect by Type'
+                    }
+                }
+            }
+        });
+
+        // สร้าง Bar Chart - Top Locations
+        const locationCtx = document.getElementById('locationChart').getContext('2d');
+        locationChartInstance = new Chart(locationCtx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(locationCount),
+                datasets: [{
+                    label: 'Number of Defects',
+                    data: Object.values(locationCount),
+                    backgroundColor: '#36a2eb',
+                    borderColor: '#1e88e5',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Defects by Row Position'
+                    }
+                }
+            }
+        });
+
+        // อัปเดต Statistics Cards
+        updateStatistics(defects, defectCount);
+    }
+
+    // ฟังก์ชันอัปเดตสถิติ
+    function updateStatistics(defects, defectCount) {
+        const total = defects.length;
+        document.getElementById('totalDefects').textContent = total;
+
+        // คำนวณ Yield Rate (สมมติว่าตรวจทั้งหมด 100 จุด)
+        const totalCells = 100; // 10x10 grid
+        const goodCells = totalCells - total;
+        const yieldRate = ((goodCells / totalCells) * 100).toFixed(1);
+        document.getElementById('yieldRate').textContent = yieldRate + '%';
+
+        // หา defect ที่พบบ่อยที่สุด
+        if (Object.keys(defectCount).length > 0) {
+            const mostCommon = Object.entries(defectCount)
+                .sort((a, b) => b[1] - a[1])[0][0];
+            document.getElementById('mostCommonDefect').textContent = mostCommon;
+        } else {
+            document.getElementById('mostCommonDefect').textContent = '-';
+        }
+    }
+
     async function loadLotsList() {
         try {
             const res = await fetch('/api/lots');
@@ -151,7 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // จดจำค่าที่เลือกไว้ก่อนหน้า
             const currentVal = lotSelect.value;
 
-            lotSelect.innerHTML = '<option value="">-- เลือก Lot Number --</option>';
+            lotSelect.innerHTML = '<option value="">-- เลือก LOT Number --</option>';
             lots.forEach(lot => {
                 const option = document.createElement('option');
                 option.value = lot;
@@ -168,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function loadDefects(lot) {
+        async function loadDefects(lot) {
         if (!lot) return;
         
         try {
@@ -189,6 +311,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 li.textContent = `(${d.gridX},${d.gridY}) - ${d.defectType}`;
                 defectList.appendChild(li);
             });
+
+            // ✅ เพิ่มบรรทัดนี้ - อัปเดตกราฟ
+            updateCharts(defects);
+
         } catch (error) {
             console.error('Error loading defects:', error);
         }
@@ -200,5 +326,20 @@ document.addEventListener('DOMContentLoaded', () => {
             c.title = '';
         });
         defectList.innerHTML = '';
+        
+        // ✅ ทำลายกราฟเก่า
+        if (defectChartInstance) {
+            defectChartInstance.destroy();
+            defectChartInstance = null;
+        }
+        if (locationChartInstance) {
+            locationChartInstance.destroy();
+            locationChartInstance = null;
+        }
+        
+        // Reset สถิติ
+        document.getElementById('totalDefects').textContent = '0';
+        document.getElementById('yieldRate').textContent = '100%';
+        document.getElementById('mostCommonDefect').textContent = '-';
     }
 });

@@ -12,12 +12,13 @@
         <div class="col-md-6">
             <label>Lot Number:</label>
             <select id="lotSelect" class="form-control">
-                <option value="">-- เลือก Lot Number หรือพิมพ์ใหม่ --</option>
+                <option value="">-- เลือก LOT Number หรือพิมพ์ใหม่ --</option>
             </select>
-            <input type="text" id="newLotInput" class="form-control mt-2" placeholder="หรือพิมพ์ Lot ใหม่ที่นี่... ตัวอย่าง: LOT-20240601-001">
+            <input type="text" id="newLotInput" class="form-control mt-2"
+                   placeholder="หรือพิมพ์ LOT ใหม่ที่นี่... ตัวอย่าง: LOT-20240601-001">
         </div>
         <div class="col-md-6 d-flex align-items-end gap-2">
-            <button id="btnReset" class="btn btn-danger ms-auto" style="display:none;">🗑️ ล้างข้อมูล Lot นี้</button>
+            <button id="btnReset" class="btn btn-danger ms-auto" style="display:none;">🗑️ ล้างข้อมูล LOT นี้</button>
             <button id="btnExport" class="btn btn-success" style="display:none;">📥 Export CSV</button>
         </div>
     </div>
@@ -33,13 +34,57 @@
         </div>
     </div>
 
-    @* <!-- ส่วนกราฟ -->
+    <!-- ส่วนกราฟ -->
     <div class="row mt-4">
         <div class="col-md-6">
-            <h5>📊 Defect Distribution</h5>
-            <canvas id="defectChart"></canvas>
+            <div class="card">
+                <div class="card-header">
+                    <h5>📊 Defect Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="defectChart"></canvas>
+                </div>
+            </div>
         </div>
-    </div> *@
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>📈 Top Defect Locations</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="locationChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5>Total Defects</h5>
+                    <h2 id="totalDefects">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5>Yield Rate</h5>
+                    <h2 id="yieldRate">100%</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5>Most Common Defect</h5>
+                    <h4 id="mostCommonDefect">-</h4>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
